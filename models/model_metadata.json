@@ -1,0 +1,54 @@
+{
+  "model_name": "FormCoachPoseMLP",
+  "version": "1.0",
+  "architecture": "MLP (10 -> 32 ReLU -> 16 ReLU -> 3)",
+  "feature_names": [
+    "exercise_squat",
+    "exercise_pushup",
+    "exercise_lunge",
+    "kneeAngle",
+    "hipAngle",
+    "elbowAngle",
+    "torsoTiltDeg",
+    "bodyLineAngle",
+    "kneeOverToeRatio",
+    "backKneeAngle"
+  ],
+  "classes": [
+    "good_form",
+    "depth_issue",
+    "alignment_issue"
+  ],
+  "feature_mean": [
+    0.3377777777777778,
+    0.3358333333333333,
+    0.3263888888888889,
+    126.2433426475525,
+    127.0134403737386,
+    140.272574795617,
+    41.31226496093803,
+    152.60946408165825,
+    0.10973204574397338,
+    128.44203766504924
+  ],
+  "feature_std": [
+    0.47295237669058304,
+    0.47228096039916956,
+    0.4688914395665137,
+    33.51576280374917,
+    31.399617480459813,
+    29.32574613006049,
+    26.763329439995676,
+    14.649025265372792,
+    0.19809788581304624,
+    32.755672696228004
+  ],
+  "metrics_held_out": {
+    "baseline_accuracy": 0.9933,
+    "baseline_macro_f1": 0.9933,
+    "onnx_mlp_accuracy": 0.9922,
+    "onnx_mlp_macro_f1": 0.9922,
+    "onnx_size_kb": 4.01,
+    "onnx_latency_ms": 0.0012
+  }
+}

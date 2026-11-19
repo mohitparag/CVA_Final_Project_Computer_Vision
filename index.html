@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FormCoach — On-Device AI Exercise & Posture Coach</title>
+  <meta name="description" content="Privacy-first, in-browser AI exercise rep counter and real-time posture coach powered by MediaPipe Pose Landmarker and ONNX Runtime Web." />
+  <link rel="stylesheet" href="css/styles.css" />
+  <!-- ONNX Runtime Web (Apache 2.0, runs entirely in the browser) -->
+  <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.1/dist/ort.min.js" defer></script>
+</head>
+<body>
+  <!-- Header -->
+  <header class="topbar no-print">
+    <div class="brand">
+      <div class="brand-icon" aria-hidden="true">FC</div>
+      <div>
+        <h1>FormCoach</h1>
+        <p class="subtitle">On-Device Pose &amp; Posture Coach · 100% Private</p>
+      </div>
+    </div>
+
+    <div class="topbar-actions">
+      <span class="privacy-pill" title="All video processing happens locally in your browser">
+        <span class="dot-green"></span> On-Device Only
+      </span>
+      <button id="btn-help" class="btn btn-secondary" type="button">Help &amp; Safety</button>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <main class="container no-print">
+    <!-- Left / Main Stage -->
+    <section class="stage-section">
+      <!-- Toolbar -->
+      <div class="controls-bar">
+        <div class="control-group">
+          <label for="exercise-select">Exercise</label>
+          <select id="exercise-select" aria-label="Select exercise">
+            <option value="squat">Squat</option>
+            <option value="pushup">Push-up</option>
+            <option value="lunge">Lunge</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label for="engine-select">Form Engine</label>
+          <select id="engine-select" aria-label="Select form evaluation engine">
+            <option value="hybrid">Hybrid (Rules + ONNX ML)</option>
+            <option value="rules">Baseline: Rule-Based</option>
+            <option value="onnx">Main Model: ONNX Classifier</option>
+          </select>
+        </div>
+
+        <div class="control-group toggles">
+          <label class="toggle-chip">
+            <input type="checkbox" id="toggle-voice" />
+            <span>Voice Cues</span>
+          </label>
+          <label class="toggle-chip">
+            <input type="checkbox" id="toggle-smoothing" checked />
+            <span>Smoothing</span>
+          </label>
+          <label class="toggle-chip">
+            <input type="checkbox" id="toggle-angles" checked />
+            <span>Angles</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Video / Canvas Viewport -->
+      <div class="viewport-card">
+        <div class="viewport-wrapper" id="viewport-wrapper">
+          <video id="webcam-video" playsinline muted class="hidden"></video>
+          <img id="uploaded-image" alt="Uploaded exercise frame" class="hidden" />
+          <canvas id="pose-canvas" width="960" height="540"></canvas>
+
+          <!-- Empty State Overlay -->
+          <div id="empty-state" class="empty-state">
+            <div class="empty-icon" aria-hidden="true">🎯</div>
+            <h2>Ready to Coach</h2>
+            <p>Start your webcam or upload a workout clip / photo. All AI runs locally in your browser—no video ever leaves your device.</p>
+            <div class="empty-actions">
+              <button id="btn-start-cam-hero" class="btn btn-primary" type="button">Start Webcam</button>
+              <label class="btn btn-secondary file-btn">
+                Upload Video / Image
+                <input type="file" id="file-input-hero" accept="video/*,image/*" hidden />
+              </label>
+            </div>
+            <p class="disclaimer-mini">Educational fitness guidance only — not medical or physiotherapy advice.</p>
+          </div>
+
+          <!-- Top-Left Telemetry HUD -->
+          <div id="hud-telemetry" class="hud-telemetry hidden">
+            <span id="hud-fps" class="hud-badge">0 FPS</span>
+            <span id="hud-latency" class="hud-badge">0 ms</span>
+            <span id="hud-confidence" class="hud-badge conf-high">Pose: --%</span>
+          </div>
+
+          <!-- Low Confidence / Not Sure Banner -->
+          <div id="not-sure-banner" class="not-sure-banner hidden" role="status" aria-live="polite">
+            <strong>Not Sure — Low Visibility:</strong>
+            <span id="not-sure-reason">Step back so your full body is visible in good lighting.</span>
+          </div>
+
+          <!-- Real-Time Coaching Cue Banner -->
+          <div id="cue-banner" class="cue-banner cue-neutral hidden" role="status" aria-live="polite">
+            <span id="cue-icon">ℹ️</span>
+            <span id="cue-text">Position yourself at a 45° or side angle and begin.</span>
+          </div>
+        </div>
+
+        <!-- Bottom Action Bar -->
+        <div class="stage-footer">
+          <div class="footer-left">
+            <button id="btn-toggle-cam" class="btn btn-primary" type="button">Start Webcam</button>
+            <button id="btn-flip-cam" class="btn btn-secondary hidden" type="button" title="Switch front/back camera">Flip Camera</button>
+            <label class="btn btn-secondary file-btn">
+              Upload Media
+              <input type="file" id="file-input" accept="video/*,image/*" hidden />
+            </label>
+          </div>
+          <div class="footer-right">
+            <button id="btn-reset" class="btn btn-secondary" type="button">Reset</button>
+            <button id="btn-summary" class="btn btn-accent" type="button">Session Summary &amp; PDF</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Sidebar: Live Metrics & Diagnostics -->
+    <aside class="sidebar">
+      <!-- Primary KPIs -->
+      <div class="card kpi-grid">
+        <div class="kpi-box">
+          <span class="kpi-label">Repetitions</span>
+          <span id="stat-reps" class="kpi-value">0</span>
+        </div>
+        <div class="kpi-box">
+          <span class="kpi-label">Good Form</span>
+          <span id="stat-good-pct" class="kpi-value good-text">--%</span>
+        </div>
+        <div class="kpi-box">
+          <span class="kpi-label">Phase</span>
+          <span id="stat-phase" class="kpi-pill">READY</span>
+        </div>
+        <div class="kpi-box">
+          <span class="kpi-label">Top Issue</span>
+          <span id="stat-top-issue" class="kpi-sub">None yet</span>
+        </div>
+      </div>
+
+      <!-- Live Joint Angles -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Live Biomechanics</h3>
+          <span id="active-side-badge" class="mini-badge">Auto Side</span>
+        </div>
+        <div id="angles-list" class="metrics-list">
+          <div class="metric-row"><span>Knee Angle</span><strong id="angle-knee">--°</strong></div>
+          <div class="metric-row"><span>Hip Angle</span><strong id="angle-hip">--°</strong></div>
+          <div class="metric-row"><span>Back / Torso Tilt</span><strong id="angle-torso">--°</strong></div>
+          <div class="metric-row"><span>Elbow Angle</span><strong id="angle-elbow">--°</strong></div>
+        </div>
+      </div>
+
+      <!-- ONNX Classifier Output -->
+      <div class="card">
+        <div class="card-header">
+          <h3>ONNX Form Classifier</h3>
+          <span id="onnx-status" class="mini-badge">Loading...</span>
+        </div>
+        <p class="card-hint">Live neural form probabilities vs. biomechanical rules.</p>
+        <div id="onnx-bars" class="prob-bars">
+          <div class="prob-row">
+            <span class="prob-label">Good Form</span>
+            <div class="prob-track"><div id="bar-good" class="prob-fill fill-good" style="width: 0%"></div></div>
+            <span id="val-good" class="prob-val">0%</span>
+          </div>
+          <div class="prob-row">
+            <span class="prob-label">Depth / Range</span>
+            <div class="prob-track"><div id="bar-depth" class="prob-fill fill-warn" style="width: 0%"></div></div>
+            <span id="val-depth" class="prob-val">0%</span>
+          </div>
+          <div class="prob-row">
+            <span class="prob-label">Alignment / Back</span>
+            <div class="prob-track"><div id="bar-align" class="prob-fill fill-bad" style="width: 0%"></div></div>
+            <span id="val-align" class="prob-val">0%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Reps Log -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Recent Reps</h3>
+          <span id="rep-count-sub" class="mini-badge">0 logged</span>
+        </div>
+        <ul id="rep-log" class="rep-log">
+          <li class="rep-empty">Complete a rep to see form feedback here.</li>
+        </ul>
+      </div>
+    </aside>
+  </main>
+
+  <!-- Session Summary Modal (Also formatted for Print-to-PDF) -->
+  <div id="summary-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="summary-title">
+    <div class="modal-content summary-sheet">
+      <div class="modal-header no-print">
+        <h2 id="summary-title">Session Summary Report</h2>
+        <button id="btn-close-summary" class="btn-icon" type="button" aria-label="Close">&times;</button>
+      </div>
+
+      <div class="print-only print-header">
+        <h1>FormCoach — Exercise Session Report</h1>
+        <p id="print-timestamp"></p>
+      </div>
+
+      <div class="summary-kpis">
+        <div class="summary-card">
+          <span>Exercise</span>
+          <strong id="sum-exercise">Squat</strong>
+        </div>
+        <div class="summary-card">
+          <span>Total Reps</span>
+          <strong id="sum-reps">0</strong>
+        </div>
+        <div class="summary-card">
+          <span>Good-Form %</span>
+          <strong id="sum-good-pct">0%</strong>
+        </div>
+        <div class="summary-card">
+          <span>Most Common Mistake</span>
+          <strong id="sum-mistake">None</strong>
+        </div>
+      </div>
+
+      <h3>Rep-by-Rep Breakdown</h3>
+      <div class="table-wrap">
+        <table class="summary-table">
+          <thead>
+            <tr>
+              <th>Rep #</th>
+              <th>Quality</th>
+              <th>Min Primary Angle</th>
+              <th>Feedback / Cues</th>
+              <th>Confidence</th>
+            </tr>
+          </thead>
+          <tbody id="summary-table-body">
+            <tr><td colspan="5">No reps recorded yet.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="disclaimer-box">
+        <strong>Responsible AI Notice:</strong> FormCoach provides automated educational feedback only and is not a substitute for certified coaching, medical, or physiotherapy advice. All analysis ran locally on your device; no video or biometric data was stored or transmitted.
+      </p>
+
+      <div class="modal-footer no-print">
+        <button id="btn-print-pdf" class="btn btn-primary" type="button">Export / Print PDF</button>
+        <button id="btn-close-summary-2" class="btn btn-secondary" type="button">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Help & Responsible AI Modal -->
+  <div id="help-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="help-title">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="help-title">Help, Camera Setup &amp; Responsible AI</h2>
+        <button id="btn-close-help" class="btn-icon" type="button" aria-label="Close">&times;</button>
+      </div>
+
+      <div class="help-body">
+        <h3>1. Best Camera Setup</h3>
+        <ul>
+          <li><strong>Angle:</strong> Place your laptop or phone at a <strong>45° to 90° side angle</strong> so knee, hip, shoulder, and ankle joints are clearly visible.</li>
+          <li><strong>Framing:</strong> Keep your full body inside the frame with even lighting (avoid strong backlighting).</li>
+          <li><strong>Clothing:</strong> Fitted athletic wear yields the highest landmark accuracy; very baggy clothing can obscure knee/hip landmarks.</li>
+        </ul>
+
+        <h3>2. Supported Exercises &amp; Posture Checks</h3>
+        <ul>
+          <li><strong>Squat:</strong> Tracks knee &amp; hip flexion depth ("Go lower"), torso lean ("Back not straight"), and knee-over-toe tracking ("Knees past toes").</li>
+          <li><strong>Push-up:</strong> Tracks elbow flexion depth ("Lower your chest more") and hip-shoulder-ankle alignment ("Hips sagging" / "Hips too high").</li>
+          <li><strong>Lunge:</strong> Tracks front/back knee flexion ("Drop back knee lower"), upright torso ("Keep torso upright"), and front knee alignment ("Front knee past toes").</li>
+        </ul>
+
+        <h3>3. Understanding "Not Sure" States</h3>
+        <p>When key joints have visibility below <strong>60%</strong> (due to occlusion, low light, or stepping out of frame), FormCoach pauses counting and displays a <em>Not Sure</em> warning instead of guessing.</p>
+
+        <h3>4. Privacy &amp; Medical Disclaimer</h3>
+        <ul>
+          <li><strong>Privacy by Design:</strong> MediaPipe Pose Landmarker and the ONNX form classifier execute 100% inside your browser (WebAssembly / WebGL). Zero frames are uploaded or saved.</li>
+          <li><strong>Not Medical Advice:</strong> This tool is an academic CV prototype for MAIB AI 221 (Sports &amp; Wellness). It is not medical or physiotherapy advice. Stop exercising if you experience pain.</li>
+        </ul>
+      </div>
+
+      <div class="modal-footer">
+        <button id="btn-close-help-2" class="btn btn-primary" type="button">Got It</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- App Entry Point (ES Modules) -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
