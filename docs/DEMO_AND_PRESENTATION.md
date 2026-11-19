@@ -2,7 +2,7 @@
 
 ## Part 1: Demo Video Script (Target: 4 Minutes)
 
-Record your screen + voiceover using OBS Studio or Loom (free) while running the **live GitHub Pages URL** (`https://<username>.github.io/<repo>/`).
+Record your screen + voiceover using OBS Studio or Loom (free) while running the **live GitHub Pages URL** (https://mohitparag.github.io/CVA_Final_Project_Computer_Vision/).
 
 | Time | Segment | What to Show on Screen | Key Narration Points |
 | :--- | :--- | :--- | :--- |

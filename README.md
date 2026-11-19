@@ -5,7 +5,8 @@ S P Jain School of Global Management
 
 FormCoach is a **100% browser-based, privacy-first** exercise repetition counter and real-time posture coach for **Squats**, **Push-ups**, and **Lunges**. All computer vision inference runs locally on the user's laptop or smartphone using **MediaPipe Pose Landmarker (Apache 2.0)** and a student-trained **ONNX Pose-Form Classifier** via **ONNX Runtime Web**—no video is ever recorded, stored, or uploaded.
 
-- **Live App URL (GitHub Pages):** `https://<your-github-username>.github.io/<repo-name>/` *(update after enabling GitHub Pages)*
+- **Live App URL (GitHub Pages):** https://mohitparag.github.io/CVA_Final_Project_Computer_Vision/
+- **Public Repository:** https://github.com/mohitparag/CVA_Final_Project_Computer_Vision
 - **Zero Paid Services:** 100% free static hosting (GitHub Pages), open-weight models, and free Google Colab T4 GPU for the Generative AI fairness audit.
 
 ---
@@ -87,13 +88,13 @@ Then open **http://localhost:8000** in Chrome, Edge, or Safari.
    git add .
    git commit -m "Initial FormCoach release"
    git branch -M main
-   git remote add origin https://github.com/<your-username>/formcoach-cv.git
+   git remote add origin https://github.com/mohitparag/CVA_Final_Project_Computer_Vision.git
    git push -u origin main
    ```
 3. In GitHub, go to **Settings → Pages → Build and deployment**:
    - Source: **Deploy from a branch**
    - Branch: **`main`** / **`/ (root)`** → Click **Save**.
-4. Within ~60 seconds, your HTTPS live app will be available at `https://<your-username>.github.io/formcoach-cv/` (HTTPS is required by mobile & laptop browsers for webcam access).
+4. Within ~60 seconds, your HTTPS live app will be available at https://mohitparag.github.io/CVA_Final_Project_Computer_Vision/ (HTTPS is required by mobile & laptop browsers for webcam access).
 
 ---
 

@@ -3,8 +3,8 @@
 **Course:** MAIB AI 221 · Computer Vision with Applications (Final Group Project — Project 10: Sports & Wellness)  
 **Institution:** S P Jain School of Global Management  
 **Author:** `[Your Name]` (`[Student ID]`)  
-**Live Application URL:** `https://<your-github-username>.github.io/<repo-name>/`  
-**Public Repository URL:** `https://github.com/<your-github-username>/<repo-name>`
+**Live Application URL:** https://mohitparag.github.io/CVA_Final_Project_Computer_Vision/  
+**Public Repository URL:** https://github.com/mohitparag/CVA_Final_Project_Computer_Vision
 
 ---
 
