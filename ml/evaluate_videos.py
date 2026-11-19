@@ -16,6 +16,7 @@ import argparse
 import csv
 import json
 import math
+import urllib.request
 from pathlib import Path
 
 import cv2
@@ -25,6 +26,8 @@ from sklearn.metrics import classification_report, confusion_matrix
 
 try:
     import mediapipe as mp
+    from mediapipe.tasks import python as mp_python
+    from mediapipe.tasks.python import vision as mp_vision
 except ImportError:
     mp = None
 
@@ -122,17 +125,20 @@ def rule_classify_bottom(exercise, feats):
     return 0
 
 
-def evaluate_clip(video_path: Path, exercise: str, ort_sess, meta):
+def evaluate_clip(video_path: Path, exercise: str, ort_sess, meta, task_model_path: Path):
     cap = cv2.VideoCapture(str(video_path))
     if not cap.isOpened():
         raise RuntimeError(f"Could not open video: {video_path}")
 
-    pose = mp.solutions.pose.Pose(
-        static_image_mode=False,
-        model_complexity=0,
-        min_detection_confidence=0.5,
+    fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
+    options = mp_vision.PoseLandmarkerOptions(
+        base_options=mp_python.BaseOptions(model_asset_path=str(task_model_path)),
+        running_mode=mp_vision.RunningMode.VIDEO,
+        num_poses=1,
+        min_pose_detection_confidence=0.5,
         min_tracking_confidence=0.5,
     )
+    landmarker = mp_vision.PoseLandmarker.create_from_options(options)
 
     cfg = THRESHOLDS[exercise]
     phase = "READY"
@@ -156,12 +162,14 @@ def evaluate_clip(video_path: Path, exercise: str, ort_sess, meta):
             break
         total_frames += 1
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        res = pose.process(rgb)
+        mp_img = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
+        ts_ms = int((total_frames / fps) * 1000)
+        res = landmarker.detect_for_video(mp_img, ts_ms)
         if not res.pose_landmarks:
             low_vis_frames += 1
             continue
 
-        feats, vis = extract_features_from_landmarks(res.pose_landmarks.landmark, exercise)
+        feats, vis = extract_features_from_landmarks(res.pose_landmarks[0], exercise)
         if vis < 0.60:
             low_vis_frames += 1
             continue
@@ -195,7 +203,7 @@ def evaluate_clip(video_path: Path, exercise: str, ort_sess, meta):
                 min_angle = 180.0
 
     cap.release()
-    pose.close()
+    landmarker.close()
 
     # Majority vote across reps in the clip
     def majority(arr):
@@ -233,6 +241,14 @@ def main():
     meta = json.loads((root / "models/model_metadata.json").read_text(encoding="utf-8"))
     ort_sess = ort.InferenceSession(str(root / "models/form_classifier.onnx"), providers=["CPUExecutionProvider"])
 
+    task_model_path = root / "models/pose_landmarker_lite.task"
+    if not task_model_path.exists():
+        print("Downloading MediaPipe Pose Landmarker Lite model (~5.5 MB)...")
+        urllib.request.urlretrieve(
+            "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",
+            str(task_model_path),
+        )
+
     rows = []
     with labels_path.open("r", encoding="utf-8") as f:
         for r in csv.DictReader(f):
@@ -254,7 +270,7 @@ def main():
         true_reps = int(r["true_reps"])
         true_cls = CLASS_TO_IDX[r["true_form_class"].strip()]
 
-        res = evaluate_clip(clip_path, ex, ort_sess, meta)
+        res = evaluate_clip(clip_path, ex, ort_sess, meta, task_model_path)
         err = abs(res["pred_reps"] - true_reps)
         rep_errors.append(err)
         per_ex_errors[ex].append(err)

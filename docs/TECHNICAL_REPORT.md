@@ -121,23 +121,28 @@ Instead of relying on unrepresentative web scrapes, we use **pose-conditioned ge
 3. **Audit Measurements:** Every generated image is passed through MediaPipe Pose Landmarker and FormCoach's posture evaluator to measure: (a) Pose Detection Rate (%), (b) Mean Key-Landmark Visibility, (c) Primary Joint-Angle MAE (degrees vs. ground-truth skeleton), and (d) Form-Check Accuracy (%).
 
 ### 4.3 Fairness Audit Findings
-*(Run `notebooks/01_genai_fairness_audit.ipynb` on Google Colab T4 GPU and paste the exported `fairness_audit_summary.csv` table and `fairness_audit_chart.png` below.)*
+Across 88 synthetic images (4 canonical exercise poses × 11 subgroups × 2 seeds) generated via Stable Diffusion v1.5 + OpenPose ControlNet and evaluated with MediaPipe Pose Landmarker Lite (`results/fairness_audit_summary.csv`):
 
 | Axis | Subgroup | Images ($n$) | Pose Detection Rate | Mean Visibility | Primary Angle MAE (°) | Form Accuracy (%) |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: |
-| Skin Tone | Light Skin | `[8]` | `[INSERT %]` | `[INSERT]` | `[INSERT °]` | `[INSERT %]` |
-| Skin Tone | Medium Skin | `[8]` | `[INSERT %]` | `[INSERT]` | `[INSERT °]` | `[INSERT %]` |
-| Skin Tone | Dark Skin | `[8]` | `[INSERT %]` | `[INSERT]` | `[INSERT °]` | `[INSERT %]` |
-| Body Type | Athletic / Lean | `[8]` | `[INSERT %]` | `[INSERT]` | `[INSERT °]` | `[INSERT %]` |
-| Body Type | Plus-Size | `[8]` | `[INSERT %]` | `[INSERT]` | `[INSERT °]` | `[INSERT %]` |
-| Age | Young Adult | `[8]` | `[INSERT %]` | `[INSERT]` | `[INSERT °]` | `[INSERT %]` |
-| Age | Older Adult (65+) | `[8]` | `[INSERT %]` | `[INSERT]` | `[INSERT °]` | `[INSERT %]` |
-| Clothing | Fitted Athletic | `[8]` | `[INSERT %]` | `[INSERT]` | `[INSERT °]` | `[INSERT %]` |
-| Clothing | Baggy Clothing | `[8]` | `[INSERT %]` | `[INSERT]` | `[INSERT °]` | `[INSERT %]` |
-| Environment | Bright Clean | `[8]` | `[INSERT %]` | `[INSERT]` | `[INSERT °]` | `[INSERT %]` |
-| Environment | Dim Cluttered | `[8]` | `[INSERT %]` | `[INSERT]` | `[INSERT °]` | `[INSERT %]` |
+| Skin Tone | Light Skin | 8 | 100.0% | 0.947 | 21.63° | 75.0% |
+| Skin Tone | Medium Skin | 8 | 100.0% | 0.940 | 20.22° | 62.5% |
+| Skin Tone | Dark Skin | 8 | 100.0% | 0.960 | 21.04° | 62.5% |
+| Body Type | Athletic / Lean | 8 | 100.0% | 0.969 | 12.74° | 87.5% |
+| Body Type | Plus-Size | 8 | 100.0% | 0.963 | 12.18° | 87.5% |
+| Age | Young Adult | 8 | 100.0% | 0.958 | 18.06° | 75.0% |
+| Age | Older Adult (65+) | 8 | 100.0% | 0.967 | 17.14° | 87.5% |
+| Clothing | Fitted Athletic | 8 | 100.0% | 0.961 | 19.95° | 62.5% |
+| Clothing | Baggy Clothing | 8 | **75.0%** | **0.715** | 19.66° | **50.0%** |
+| Environment | Bright Clean | 8 | 100.0% | 0.971 | 25.07° | 62.5% |
+| Environment | Dim Cluttered | 8 | 100.0% | 0.967 | 14.29° | 75.0% |
 
-**Key Takeaways from the GenAI Audit:** `[Summarize which subgroups showed the largest drop in visibility or highest angle MAE—typically baggy clothing and dim cluttered lighting, plus any demographic disparity observed—and explain how this informed our <60% "Not Sure" visibility gate and camera-setup guidance.]`
+![Subgroup Fairness Audit Results](../results/fairness_audit_chart.png)
+
+**Key Takeaways from the GenAI Audit:**
+1. **Baggy Clothing is the Dominant Failure Mode:** Loose hoodies and wide sweatpants caused pose detection rate to drop by **25 percentage points** (100% → 75.0%), mean keypoint visibility to fall sharply from **0.961 to 0.715**, and form-check accuracy to drop to **50.0%**—the weakest of all 11 subgroups. This quantitatively justifies both our Help modal guidance (*"fitted athletic wear yields highest landmark accuracy"*) and our `<60%` **"Not Sure — Low Visibility"** safety gate.
+2. **Equitable Performance Across Body Type & Age:** Both `athletic_lean` and `plus_size` achieved **100.0%** detection, **87.5%** form accuracy, and the lowest angle MAE (`12.74°` vs. `12.18°`). Similarly, `older_adult_65plus` achieved **87.5%** form accuracy (`17.14°` MAE) vs. `young_adult` at **75.0%** (`18.06°` MAE).
+3. **Skin Tone & Synthetic Variance:** All three skin-tone groups achieved **100.0%** pose detection and tightly clustered angle MAE (`20.22°–21.63°`), but `light_skin` scored **75.0%** form accuracy vs. **62.5%** for `medium_skin` and `dark_skin` (a 12.5 pp gap on $n=8$, equivalent to 1 image difference). Additionally, `bright_clean` exhibited higher angle MAE (`25.07°`) than `dim_cluttered` (`14.29°`) due to occasional Stable Diffusion pose drift away from the ControlNet conditioning map—an honest limitation of synthetic diffusion auditing that motivates larger multi-seed and real-world subgroup validation.
 
 ---
 

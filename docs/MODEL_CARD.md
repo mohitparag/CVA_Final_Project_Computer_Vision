@@ -31,16 +31,16 @@
 | Real-World Form-Error Macro-F1 | `[INSERT F1]` | `[INSERT F1]` |
 | Live Browser Speed (Laptop / Phone) | `[INSERT FPS]` / `[INSERT FPS]` | `[INSERT FPS]` / `[INSERT FPS]` |
 
-## 5. Subgroup Fairness Results (ControlNet Diffusion Audit)
-*Complete after running `notebooks/01_genai_fairness_audit.ipynb` on Google Colab T4 GPU:*
+## 5. Subgroup Fairness Results (ControlNet Diffusion Audit, $n = 88$)
+Evaluated on 88 pose-conditioned synthetic images (4 canonical poses × 11 subgroups × 2 seeds; see `results/fairness_audit_summary.csv` & `results/fairness_audit_chart.png`):
 
 | Subgroup Axis | Best-Performing Subgroup | Weakest-Performing Subgroup | Observed Gap / Finding |
 | :--- | :--- | :--- | :--- |
-| Skin Tone | `[INSERT]` | `[INSERT]` | `[INSERT detection & angle MAE gap]` |
-| Body Type | `[INSERT]` | `[INSERT]` | `[INSERT detection & angle MAE gap]` |
-| Age (Young vs. 65+) | `[INSERT]` | `[INSERT]` | `[INSERT detection & angle MAE gap]` |
-| Clothing (Fitted vs. Baggy) | Fitted athletic wear | Baggy hoodie & sweatpants | Expected knee/hip landmark drift under loose fabric |
-| Lighting (Bright vs. Dim) | Bright clean room | Dim cluttered room | Lower landmark visibility triggering "Not Sure" state |
+| Skin Tone | Light Skin (100% det, 75.0% form acc, 21.63° MAE) | Medium & Dark Skin (100% det, 62.5% form acc, 20.22°–21.04° MAE) | 100% detection across all tones; 12.5 pp form-acc gap (1/8 image diff) warrants larger real-world test |
+| Body Type | Athletic & Plus-Size tied (100% det, 87.5% form acc) | None (parity observed) | Equitable performance: 12.74° MAE (athletic) vs. 12.18° MAE (plus-size) |
+| Age (Young vs. 65+) | Older Adult 65+ (100% det, 87.5% form acc, 17.14° MAE) | Young Adult (100% det, 75.0% form acc, 18.06° MAE) | Strong parity across age groups |
+| Clothing (Fitted vs. Baggy) | Fitted Athletic (100% det, 0.961 vis, 62.5% form acc) | **Baggy Clothing (75.0% det, 0.715 vis, 50.0% form acc)** | **Largest drop (-25 pp detection, -0.246 visibility)** — motivates `<60%` "Not Sure" gate & fitted-wear tip |
+| Lighting (Bright vs. Dim) | Dim Cluttered (100% det, 75.0% form acc, 14.29° MAE) | Bright Clean (100% det, 62.5% form acc, 25.07° MAE) | Occasional SD 1.5 pose drift on bright-room prompts highlights synthetic-to-real audit nuance |
 
 ## 6. Known Failures & Mitigations
 - **Baggy / Loose Clothing:** Obscures hip and knee joint centres, inflating knee-angle error. *Mitigation:* Camera setup guide recommends fitted sportswear; One-Euro smoothing damps jitter.
