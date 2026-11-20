@@ -1,18 +1,21 @@
 filename,exercise,true_reps,true_form_class,mistake_type,source_licence,condition
-squat_01_good.mp4,squat,5,good_form,none,Pexels CC0 / Kaggle Workout,normal_lighting
-squat_02_good.mp4,squat,8,good_form,none,Pexels CC0 / Kaggle Workout,normal_lighting
-squat_03_shallow.mp4,squat,5,depth_issue,go_lower,Open-source / Volunteer,normal_lighting
-squat_04_back_lean.mp4,squat,5,alignment_issue,back_not_straight,Open-source / Volunteer,normal_lighting
-squat_05_knees_toes.mp4,squat,5,alignment_issue,knees_past_toes,Open-source / Volunteer,normal_lighting
-squat_06_baggy_clothes.mp4,squat,5,good_form,none,Open-source / Volunteer,baggy_clothing
-squat_07_low_light.mp4,squat,5,good_form,none,Open-source / Volunteer,low_light
-pushup_01_good.mp4,pushup,6,good_form,none,Pexels CC0 / Kaggle Workout,normal_lighting
-pushup_02_good.mp4,pushup,10,good_form,none,Pexels CC0 / Kaggle Workout,normal_lighting
-pushup_03_shallow.mp4,pushup,6,depth_issue,go_lower,Open-source / Volunteer,normal_lighting
-pushup_04_hips_sag.mp4,pushup,6,alignment_issue,hips_sagging,Open-source / Volunteer,normal_lighting
-pushup_05_side_occluded.mp4,pushup,5,good_form,none,Open-source / Volunteer,strict_side_view
-lunge_01_good.mp4,lunge,6,good_form,none,Pexels CC0 / Kaggle Workout,normal_lighting
-lunge_02_good.mp4,lunge,8,good_form,none,Pexels CC0 / Kaggle Workout,normal_lighting
-lunge_03_shallow.mp4,lunge,6,depth_issue,go_lower,Open-source / Volunteer,normal_lighting
-lunge_04_torso_lean.mp4,lunge,6,alignment_issue,back_not_straight,Open-source / Volunteer,normal_lighting
-lunge_05_knee_over_toe.mp4,lunge,6,alignment_issue,knees_past_toes,Open-source / Volunteer,normal_lighting
+lunge/13265211_1920_1080_25fps.mp4,lunge,0,good_form,none,Pexels Free Licence,normal_lighting
+lunge/4488004-hd_1080_1920_25fps.mp4,lunge,0,good_form,none,Pexels Free Licence,normal_lighting
+lunge/5025832-hd_1080_1920_25fps.mp4,lunge,0,good_form,none,Pexels Free Licence,normal_lighting
+lunge/6326756-hd_1080_1920_25fps.mp4,lunge,0,good_form,none,Pexels Free Licence,normal_lighting
+lunge/7746661-hd_1080_1920_30fps.mp4,lunge,0,good_form,none,Pexels Free Licence,normal_lighting
+lunge/8171292-uhd_3840_2160_25fps.mp4,lunge,0,good_form,none,Pexels Free Licence,normal_lighting
+lunge/8233047-uhd_2160_4096_25fps.mp4,lunge,0,good_form,none,Pexels Free Licence,normal_lighting
+push up/4367576-hd_1920_1080_30fps.mp4,pushup,0,good_form,none,Pexels Free Licence,normal_lighting
+push up/4804787-uhd_3840_2160_25fps.mp4,pushup,0,good_form,none,Pexels Free Licence,normal_lighting
+push up/4945123-uhd_4096_2160_24fps.mp4,pushup,0,good_form,none,Pexels Free Licence,normal_lighting
+push up/4964650-hd_1920_1080_25fps.mp4,pushup,0,good_form,none,Pexels Free Licence,normal_lighting
+push up/6022762-uhd_3840_2160_25fps.mp4,pushup,0,good_form,none,Pexels Free Licence,normal_lighting
+push up/8520078-uhd_4096_1680_25fps.mp4,pushup,0,good_form,none,Pexels Free Licence,normal_lighting
+push up/8544666-uhd_3840_2160_25fps.mp4,pushup,0,good_form,none,Pexels Free Licence,normal_lighting
+squats/4838220-uhd_2160_3840_24fps.mp4,squat,0,good_form,none,Pexels Free Licence,normal_lighting
+squats/6454275-uhd_2160_3840_24fps.mp4,squat,0,good_form,none,Pexels Free Licence,normal_lighting
+squats/6892548-uhd_2160_3840_25fps.mp4,squat,0,good_form,none,Pexels Free Licence,normal_lighting
+squats/6980132-uhd_2160_4096_30fps.mp4,squat,0,good_form,none,Pexels Free Licence,normal_lighting
+squats/6980765-uhd_4096_2160_30fps.mp4,squat,0,good_form,none,Pexels Free Licence,normal_lighting
+squats/8837221-uhd_2160_4096_25fps.mp4,squat,0,good_form,none,Pexels Free Licence,normal_lighting

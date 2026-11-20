@@ -161,6 +161,12 @@ def evaluate_clip(video_path: Path, exercise: str, ort_sess, meta, task_model_pa
         if not ret:
             break
         total_frames += 1
+        # Downscale 4K/HD frames to max 640px for fast, webcam-realistic inference
+        fh, fw = frame.shape[:2]
+        max_dim = max(fh, fw)
+        if max_dim > 640:
+            scale = 640.0 / max_dim
+            frame = cv2.resize(frame, (int(fw * scale), int(fh * scale)), interpolation=cv2.INTER_AREA)
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         mp_img = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
         ts_ms = int((total_frames / fps) * 1000)
@@ -271,6 +277,12 @@ def main():
         true_cls = CLASS_TO_IDX[r["true_form_class"].strip()]
 
         res = evaluate_clip(clip_path, ex, ort_sess, meta, task_model_path)
+        print(
+            f"  [{len(y_true)+1}/{len(rows)}] {r['filename']} ({ex}) -> "
+            f"pred_reps={res['pred_reps']} (true={true_reps}), "
+            f"rule={CLASSES[res['rule_class']]}, onnx={CLASSES[res['onnx_class']]}, "
+            f"low_vis={res['low_vis_ratio']*100:.1f}%"
+        )
         err = abs(res["pred_reps"] - true_reps)
         rep_errors.append(err)
         per_ex_errors[ex].append(err)
